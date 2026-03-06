@@ -79,6 +79,12 @@ public class ConfigTab {
         // 测试Tab
         mainPanel.addTab("规则测试", createTestPanel());
 
+        // 帮助Tab
+        mainPanel.addTab("帮助", new HelpTab().getUI());
+
+        // 关于Tab
+        mainPanel.addTab("关于", new AboutTab().getUI());
+
         // 加载数据
         loadRules();
         loadGroups();

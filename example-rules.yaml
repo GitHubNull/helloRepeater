@@ -1,0 +1,30 @@
+rules:
+  - id: "custom_path_regex"
+    name: "自定义路径正则"
+    type: "PATH_REGEX"
+    pattern: "/api/v([0-9]+)/(.+)"
+    priority: 10
+    enabled: true
+    description: "从路径提取API版本和接口名"
+    pathStartIndex: -1
+    pathEndIndex: -1
+    
+  - id: "custom_body_method"
+    name: "Body方法提取"
+    type: "BODY_REGEX"
+    pattern: '"method":\\s*"([^"]+)"'
+    priority: 20
+    enabled: true
+    description: "从JSON body提取method字段"
+    pathStartIndex: -1
+    pathEndIndex: -1
+    
+  - id: "custom_json_action"
+    name: "JSON Action提取"
+    type: "BODY_JSON_PATH"
+    pattern: "$.data.action"
+    priority: 30
+    enabled: true
+    description: "从JSON的data对象提取action"
+    pathStartIndex: -1
+    pathEndIndex: -1

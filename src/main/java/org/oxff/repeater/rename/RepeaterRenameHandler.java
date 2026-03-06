@@ -63,7 +63,7 @@ public class RepeaterRenameHandler {
                 extractedName = extractedName.substring(extractedName.length() - 16);
             }
 
-            return repeaterTabId + "-" + extractedName;
+            return repeaterTabId + "-" + request.method() + "-" + extractedName;
 
         } catch (SQLException e) {
             api.logging().logToError("加载重命名规则失败: " + e.getMessage());

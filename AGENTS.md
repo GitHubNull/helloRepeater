@@ -99,13 +99,87 @@ org.oxff.repeater/
 - Never expose internal mutable state
 - Close resources in finally blocks or use try-with-resources
 
-## Git Workflow
+## Dependencies
+
+Key dependencies used in this project:
+- `montoya-api` - Burp Suite Montoya API (provided scope)
+- `json-path` - JSON Path extraction library
+- `sqlite-jdbc` - SQLite database driver
+- `snakeyaml` - YAML processing
+- `jackson-databind` - JSON serialization
+- `junit-jupiter` - Testing framework
+
+## Testing Guidelines
+
+### Test Structure
+- Test classes: `ClassNameTest` in `src/test/java`
+- Test methods: `shouldDoSomething` or `testMethodName`
+- Use `@BeforeEach` for setup, `@AfterEach` for cleanup
+- Prefer assertions with descriptive messages
+
+### Test Commands
 ```bash
-# Before commit
+# Run all tests
+mvn test
+
+# Run specific test class
+mvn test -Dtest=SQLiteStorageTest
+
+# Run specific test method
+mvn test -Dtest=SQLiteStorageTest#shouldSaveRule
+
+# Run with debug output
+mvn test -X
+
+# Skip tests during build
+mvn package -DskipTests
+```
+
+## Burp API Usage
+
+### Key Interfaces
+- `BurpExtension` - Main entry point
+- `MontoyaApi` - Central API access
+- `Repeater` - Repeater tool interaction
+- `HttpRequest` / `HttpResponse` - HTTP message handling
+
+### Common Patterns
+```java
+// Access API in extension
+api.extension().setName("helloRepeater");
+
+// Register UI components
+api.userInterface().registerSuiteTab("Tab Name", component);
+
+// Log messages
+api.logging().logToOutput("Info message");
+api.logging().logToError("Error message");
+```
+
+## Git Workflow
+
+```bash
+# Before commit - verify build
 mvn clean compile
 
-# Commit message format
-type: brief description
+# Check status
+git status
+
+# Stage changes
+git add -A
+
+# Commit with proper message
+git commit -m "feat: add new feature"
+
+# Tag releases
+git tag -a v1.0.0 -m "Release v1.0.0"
+```
+
+### Commit Message Format
+```
+type: brief description (50 chars or less)
+
+Body explaining what and why (if needed)
 
 # Types: feat, fix, refactor, docs, chore, test
 ```

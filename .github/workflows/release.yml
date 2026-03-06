@@ -1,0 +1,199 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Validate tag format
+        id: validate_tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "Tag: $TAG"
+          
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "Error: Tag $TAG does not follow semantic versioning"
+            exit 1
+          fi
+          
+          if [[ "$TAG" =~ -[a-zA-Z0-9] ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+      
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "previous_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREV_TAG"
+      
+      - name: Generate Release Notes
+        id: generate_notes
+        run: |
+          CURRENT_TAG="${{ steps.validate_tag.outputs.tag_name }}"
+          PREV_TAG="${{ steps.prev_tag.outputs.previous_tag }}"
+          
+          if [ -z "$PREV_TAG" ]; then
+            COMMIT_RANGE=""
+            echo "No previous tag found, using all commits"
+          else
+            COMMIT_RANGE="${PREV_TAG}..${CURRENT_TAG}"
+            echo "Commit range: $COMMIT_RANGE"
+          fi
+          
+          FEATURES=""
+          FIXES=""
+          REFACTORS=""
+          PERF=""
+          DOCS=""
+          CHORES=""
+          TESTS=""
+          OTHERS=""
+          
+          if [ -z "$COMMIT_RANGE" ]; then
+            COMMITS=$(git log --pretty=format:"%s" --no-merges)
+          else
+            COMMITS=$(git log --pretty=format:"%s" --no-merges "$COMMIT_RANGE")
+          fi
+          
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            
+            if [[ "$line" =~ ^([a-z]+)(\(.+\))?:[[:space:]]*(.+)$ ]]; then
+              TYPE="${BASH_REMATCH[1]}"
+              SCOPE="${BASH_REMATCH[2]}"
+              DESC="${BASH_REMATCH[3]}"
+              
+              if [ -n "$SCOPE" ]; then
+                FORMATTED="- ${SCOPE}: ${DESC}"
+              else
+                FORMATTED="- ${DESC}"
+              fi
+              
+              case "$TYPE" in
+                feat|feature)
+                  FEATURES="${FEATURES}${FORMATTED}"$'\n'
+                  ;;
+                fix)
+                  FIXES="${FIXES}${FORMATTED}"$'\n'
+                  ;;
+                refactor)
+                  REFACTORS="${REFACTORS}${FORMATTED}"$'\n'
+                  ;;
+                perf)
+                  PERF="${PERF}${FORMATTED}"$'\n'
+                  ;;
+                docs)
+                  DOCS="${DOCS}${FORMATTED}"$'\n'
+                  ;;
+                chore)
+                  CHORES="${CHORES}${FORMATTED}"$'\n'
+                  ;;
+                test|tests)
+                  TESTS="${TESTS}${FORMATTED}"$'\n'
+                  ;;
+                *)
+                  OTHERS="${OTHERS}${FORMATTED}"$'\n'
+                  ;;
+              esac
+            else
+              OTHERS="${OTHERS}- ${line}"$'\n'
+            fi
+          done <<< "$COMMITS"
+          
+          NOTES=""
+          
+          if [ -n "$FEATURES" ]; then
+            NOTES="${NOTES}### ✨ Features\n\n${FEATURES}\n"
+          fi
+          
+          if [ -n "$FIXES" ]; then
+            NOTES="${NOTES}### 🐛 Bug Fixes\n\n${FIXES}\n"
+          fi
+          
+          if [ -n "$REFACTORS" ]; then
+            NOTES="${NOTES}### ♻️ Refactoring\n\n${REFACTORS}\n"
+          fi
+          
+          if [ -n "$PERF" ]; then
+            NOTES="${NOTES}### ⚡ Performance\n\n${PERF}\n"
+          fi
+          
+          if [ -n "$DOCS" ]; then
+            NOTES="${NOTES}### 📚 Documentation\n\n${DOCS}\n"
+          fi
+          
+          if [ -n "$TESTS" ]; then
+            NOTES="${NOTES}### ✅ Tests\n\n${TESTS}\n"
+          fi
+          
+          if [ -n "$CHORES" ]; then
+            NOTES="${NOTES}### 🔧 Chores\n\n${CHORES}\n"
+          fi
+          
+          if [ -n "$OTHERS" ]; then
+            NOTES="${NOTES}### 📝 Other Changes\n\n${OTHERS}\n"
+          fi
+          
+          if [ -z "$NOTES" ]; then
+            NOTES="### 📝 Changes\n\nNo conventional commits found in this release."
+          fi
+          
+          if [ -n "$PREV_TAG" ]; then
+            REPO_URL="https://github.com/${{ github.repository }}"
+            NOTES="${NOTES}\n---\n**Full Changelog**: [${PREV_TAG}...${CURRENT_TAG}](${REPO_URL}/compare/${PREV_TAG}...${CURRENT_TAG})"
+          fi
+          
+          echo "$NOTES" > release_notes.md
+          cat release_notes.md
+          
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+      
+      - name: Get JAR file
+        id: get_jar
+        run: |
+          JAR_FILE=$(ls target/*.jar | grep -v original | head -n 1)
+          JAR_NAME=$(basename "$JAR_FILE")
+          echo "jar_path=$JAR_FILE" >> $GITHUB_OUTPUT
+          echo "jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.validate_tag.outputs.tag_name }}
+          body_path: release_notes.md
+          files: ${{ steps.get_jar.outputs.jar_path }}
+          prerelease: ${{ steps.validate_tag.outputs.is_prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

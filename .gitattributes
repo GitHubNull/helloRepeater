@@ -1,0 +1,45 @@
+# 自动处理换行符
+* text=auto
+
+# Java 源文件使用 LF 换行符
+*.java text eol=lf
+
+# XML 配置文件
+*.xml text eol=lf
+
+# Markdown 文档
+*.md text eol=lf
+
+# YAML 文件
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# 属性文件
+*.properties text eol=lf
+
+# Git 相关
+gitignore text eol=lf
+gitattributes text eol=lf
+
+# 脚本文件
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# 二进制文件不处理换行符
+*.jar binary
+*.db binary
+*.sqlite binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary

@@ -1,6 +1,7 @@
 package org.oxff.repeater.config;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -22,99 +23,151 @@ public class AboutTab {
     }
 
     private void initUI() {
-        mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(new Color(245, 245, 245));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(10, 0, 10, 0);
+        // 创建HTML显示面板
+        JEditorPane htmlPane = createHtmlPane();
+        JScrollPane scrollPane = new JScrollPane(htmlPane);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBackground(new Color(245, 245, 245));
+        scrollPane.getViewport().setBackground(new Color(245, 245, 245));
+        
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+    }
 
-        int row = 0;
+    private JEditorPane createHtmlPane() {
+        JEditorPane pane = new JEditorPane();
+        pane.setContentType("text/html");
+        pane.setEditable(false);
+        pane.setBackground(new Color(245, 245, 245));
+        
+        // 生成HTML内容
+        String html = generateHtmlContent();
+        pane.setText(html);
+        
+        // 添加链接点击监听器
+        pane.addHyperlinkListener(e -> {
+            if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                String url = e.getURL().toString();
+                openExternalLink(url);
+            }
+        });
+        
+        return pane;
+    }
 
-        // 插件标题
-        gbc.gridy = row++;
-        JLabel titleLabel = new JLabel("helloRepeater");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
-        titleLabel.setForeground(new Color(51, 51, 51));
-        mainPanel.add(titleLabel, gbc);
-
-        // 版本号
-        gbc.gridy = row++;
+    private String generateHtmlContent() {
         String version = getVersionFromGit();
-        JLabel versionLabel = new JLabel("版本: " + version);
-        versionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        versionLabel.setForeground(new Color(102, 102, 102));
-        mainPanel.add(versionLabel, gbc);
-
-        // 分隔线
-        gbc.gridy = row++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        JSeparator separator1 = new JSeparator();
-        separator1.setPreferredSize(new Dimension(400, 1));
-        mainPanel.add(separator1, gbc);
-        gbc.fill = GridBagConstraints.NONE;
-
-        // 插件描述
-        gbc.gridy = row++;
-        JLabel descLabel = new JLabel("Burp Suite Repeater 管理插件");
-        descLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
-        descLabel.setForeground(new Color(68, 68, 68));
-        mainPanel.add(descLabel, gbc);
-
-        // 功能简介
-        gbc.gridy = row++;
-        JLabel featuresLabel = new JLabel("自动重命名标签页 | 分组管理 | 规则配置");
-        featuresLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        featuresLabel.setForeground(new Color(136, 136, 136));
-        mainPanel.add(featuresLabel, gbc);
-
-        // 分隔线
-        gbc.gridy = row++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        JSeparator separator2 = new JSeparator();
-        separator2.setPreferredSize(new Dimension(400, 1));
-        mainPanel.add(separator2, gbc);
-        gbc.fill = GridBagConstraints.NONE;
-
-        // 作者信息
-        gbc.gridy = row++;
-        JPanel authorPanel = createInfoPanel("作者", "oxff");
-        mainPanel.add(authorPanel, gbc);
-
-        // 系统要求
-        gbc.gridy = row++;
-        JPanel requirementsPanel = createRequirementsPanel();
-        mainPanel.add(requirementsPanel, gbc);
-
-        // 许可证
-        gbc.gridy = row++;
-        JPanel licensePanel = createInfoPanel("许可证", "Apache License 2.0");
-        mainPanel.add(licensePanel, gbc);
-
-        // GitHub链接
-        gbc.gridy = row++;
-        JPanel githubPanel = createLinkPanel("GitHub", "https://github.com/GitHubNull/helloRepeater");
-        mainPanel.add(githubPanel, gbc);
-
-        // 分隔线
-        gbc.gridy = row++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        JSeparator separator3 = new JSeparator();
-        separator3.setPreferredSize(new Dimension(400, 1));
-        mainPanel.add(separator3, gbc);
-        gbc.fill = GridBagConstraints.NONE;
-
-        // 依赖组件
-        gbc.gridy = row++;
-        JPanel dependenciesPanel = createDependenciesPanel();
-        mainPanel.add(dependenciesPanel, gbc);
-
-        // 弹性空间
-        gbc.gridy = row++;
-        gbc.weighty = 1.0;
-        mainPanel.add(Box.createVerticalGlue(), gbc);
+        
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "<style>" +
+                "body { " +
+                "  font-family: Arial, sans-serif; " +
+                "  text-align: center; " +
+                "  padding: 20px; " +
+                "  background-color: #f5f5f5; " +
+                "  color: #333; " +
+                "}" +
+                "h1 { " +
+                "  font-size: 28px; " +
+                "  font-weight: bold; " +
+                "  margin-bottom: 10px; " +
+                "  color: #333; " +
+                "}" +
+                ".version { " +
+                "  font-size: 14px; " +
+                "  color: #666; " +
+                "  margin-bottom: 20px; " +
+                "}" +
+                ".separator { " +
+                "  border: none; " +
+                "  border-top: 1px solid #ddd; " +
+                "  margin: 20px auto; " +
+                "  width: 80%; " +
+                "}" +
+                ".description { " +
+                "  font-size: 14px; " +
+                "  color: #444; " +
+                "  margin-bottom: 10px; " +
+                "}" +
+                ".features { " +
+                "  font-size: 12px; " +
+                "  color: #888; " +
+                "  margin-bottom: 20px; " +
+                "}" +
+                ".section { " +
+                "  margin: 15px 0; " +
+                "}" +
+                ".label { " +
+                "  font-weight: bold; " +
+                "  color: #666; " +
+                "  font-size: 12px; " +
+                "}" +
+                ".value { " +
+                "  color: #444; " +
+                "  font-size: 12px; " +
+                "}" +
+                "a { " +
+                "  color: #0066cc; " +
+                "  text-decoration: underline; " +
+                "}" +
+                "a:hover { " +
+                "  color: #0052a3; " +
+                "}" +
+                ".requirements { " +
+                "  font-size: 12px; " +
+                "  color: #888; " +
+                "  line-height: 1.6; " +
+                "}" +
+                ".dependencies { " +
+                "  font-size: 11px; " +
+                "  color: #999; " +
+                "  margin-top: 5px; " +
+                "}" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<h1>helloRepeater</h1>" +
+                "<div class='version'>版本: " + version + "</div>" +
+                "<hr class='separator'>" +
+                "<div class='description'>Burp Suite Repeater 管理插件</div>" +
+                "<div class='features'>自动重命名标签页 | 分组管理 | 规则配置</div>" +
+                "<hr class='separator'>" +
+                "<div class='section'>" +
+                "<span class='label'>作者:</span> " +
+                "<span class='value'>oxff</span>" +
+                "</div>" +
+                "<div class='section'>" +
+                "<div class='label'>系统要求</div>" +
+                "<div class='requirements'>" +
+                "• Java 17+<br>" +
+                "• Burp Suite 2023.x+<br>" +
+                "• Windows / macOS / Linux" +
+                "</div>" +
+                "</div>" +
+                "<div class='section'>" +
+                "<span class='label'>许可证:</span> " +
+                "<span class='value'>Apache License 2.0</span>" +
+                "</div>" +
+                "<div class='section'>" +
+                "<span class='label'>GitHub:</span> " +
+                "<a href='https://github.com/GitHubNull/helloRepeater'>" +
+                "https://github.com/GitHubNull/helloRepeater" +
+                "</a>" +
+                "</div>" +
+                "<hr class='separator'>" +
+                "<div class='section'>" +
+                "<div class='label'>依赖组件</div>" +
+                "<div class='dependencies'>" +
+                "Burp Montoya API | Jayway JSONPath | SQLite JDBC | Jackson | SnakeYAML" +
+                "</div>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
     }
 
     /**
@@ -192,119 +245,14 @@ public class AboutTab {
         return null;
     }
 
-    private JPanel createInfoPanel(String label, String value) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        panel.setOpaque(false);
-
-        JLabel labelComponent = new JLabel(label + ":");
-        labelComponent.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        labelComponent.setForeground(new Color(102, 102, 102));
-
-        JLabel valueComponent = new JLabel(value);
-        valueComponent.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        valueComponent.setForeground(new Color(68, 68, 68));
-
-        panel.add(labelComponent);
-        panel.add(valueComponent);
-
-        return panel;
-    }
-
-    private JPanel createLinkPanel(String label, String url) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        panel.setOpaque(false);
-
-        JLabel labelComponent = new JLabel(label + ":");
-        labelComponent.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        labelComponent.setForeground(new Color(102, 102, 102));
-
-        JButton linkButton = new JButton("<html><u>" + url + "</u></html>");
-        linkButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        linkButton.setForeground(new Color(0, 102, 204));
-        linkButton.setBorderPainted(false);
-        linkButton.setContentAreaFilled(false);
-        linkButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        linkButton.addActionListener(e -> {
-            try {
-                Desktop.getDesktop().browse(new java.net.URI(url));
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(panel,
-                        "无法打开浏览器，请手动访问:\n" + url,
-                        "打开链接失败",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        panel.add(labelComponent);
-        panel.add(linkButton);
-
-        return panel;
-    }
-
-    private JPanel createRequirementsPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-
-        JLabel titleLabel = new JLabel("系统要求");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        titleLabel.setForeground(new Color(102, 102, 102));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(titleLabel);
-        panel.add(Box.createVerticalStrut(5));
-
-        String[] requirements = {
-                "Java 17+",
-                "Burp Suite 2023.x+",
-                "Windows / macOS / Linux"
-        };
-
-        for (String req : requirements) {
-            JLabel reqLabel = new JLabel("• " + req);
-            reqLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-            reqLabel.setForeground(new Color(136, 136, 136));
-            reqLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            panel.add(reqLabel);
+    private void openExternalLink(String url) {
+        try {
+            Desktop.getDesktop().browse(new java.net.URI(url));
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mainPanel,
+                    "无法打开浏览器，请手动访问:\n" + url,
+                    "打开链接失败",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
-
-        return panel;
-    }
-
-    private JPanel createDependenciesPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-
-        JLabel titleLabel = new JLabel("依赖组件");
-        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        titleLabel.setForeground(new Color(102, 102, 102));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(titleLabel);
-        panel.add(Box.createVerticalStrut(5));
-
-        String[] dependencies = {
-                "Burp Montoya API",
-                "Jayway JSONPath",
-                "SQLite JDBC",
-                "Jackson",
-                "SnakeYAML"
-        };
-
-        // 使用流式布局显示依赖
-        JPanel depsFlowPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 2));
-        depsFlowPanel.setOpaque(false);
-
-        for (String dep : dependencies) {
-            JLabel depLabel = new JLabel(dep);
-            depLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-            depLabel.setForeground(new Color(153, 153, 153));
-            depsFlowPanel.add(depLabel);
-        }
-
-        panel.add(depsFlowPanel);
-
-        return panel;
     }
 }

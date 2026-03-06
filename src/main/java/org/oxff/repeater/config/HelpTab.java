@@ -1,15 +1,16 @@
 package org.oxff.repeater.config;
 
-import burp.api.montoya.MontoyaApi;
-
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -97,8 +98,42 @@ public class HelpTab {
         root.add(links);
 
         navigationTree = new JTree(new DefaultTreeModel(root));
-        navigationTree.setRootVisible(true);
-        navigationTree.setShowsRootHandles(true);
+        navigationTree.setRootVisible(false);  // 隐藏根节点，从一级开始显示
+        navigationTree.setShowsRootHandles(true);  // 显示展开/折叠图标
+        navigationTree.setRowHeight(22);  // 设置行高，确保图标可见
+        
+        // 设置树形样式，显示连接线
+        navigationTree.putClientProperty("JTree.lineStyle", "Angled");
+        
+        // 设置自定义渲染器，强制显示层级缩进
+        navigationTree.setCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value,
+                    boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                Component c = super.getTreeCellRendererComponent(tree, value, selected,
+                        expanded, leaf, row, hasFocus);
+                
+                // 根据节点层级设置缩进
+                if (value instanceof DefaultMutableTreeNode) {
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+                    int level = node.getLevel();
+                    // 根节点level=0，一级节点level=1，二级节点level=2
+                    // 每个层级缩进20像素
+                    int indent = (level - 1) * 20;
+                    if (indent < 0) indent = 0;
+                    
+                    if (c instanceof JLabel) {
+                        JLabel label = (JLabel) c;
+                        label.setBorder(BorderFactory.createEmptyBorder(2, indent, 2, 5));
+                    }
+                }
+                
+                return c;
+            }
+        });
+        
+        // 默认展开所有节点（使用递归方式）
+        expandAllNodes(navigationTree, root, new TreePath(root));
 
         // 添加选择监听器
         navigationTree.addTreeSelectionListener(new TreeSelectionListener() {
@@ -120,13 +155,11 @@ public class HelpTab {
         contentPane.setEditable(false);
         contentPane.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
 
-        // 添加点击链接支持
-        contentPane.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    // 处理链接点击
-                }
+        // 添加链接点击监听器
+        contentPane.addHyperlinkListener(e -> {
+            if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                String url = e.getURL().toString();
+                openExternalLink(url);
             }
         });
 
@@ -179,13 +212,10 @@ public class HelpTab {
             case "常见问题解决":
                 return getCommonSolutionsContent();
             case "JSON Path语法":
-                openExternalLink("https://goessner.net/articles/JsonPath/");
                 return getJsonPathReferenceContent();
             case "XPath语法":
-                openExternalLink("https://www.w3schools.com/xml/xpath_syntax.asp");
                 return getXPathReferenceContent();
             case "正则表达式":
-                openExternalLink("https://regexr.com/");
                 return getRegexReferenceContent();
             default:
                 return getDefaultContent();
@@ -726,5 +756,16 @@ public class HelpTab {
             // 如果无法打开浏览器，忽略错误
             System.out.println("无法打开链接: " + url);
         }
+    }
+
+    private void expandAllNodes(JTree tree, TreeNode node, TreePath path) {
+        if (node.getChildCount() >= 0) {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                TreeNode childNode = node.getChildAt(i);
+                TreePath childPath = path.pathByAddingChild(childNode);
+                expandAllNodes(tree, childNode, childPath);
+            }
+        }
+        tree.expandPath(path);
     }
 }

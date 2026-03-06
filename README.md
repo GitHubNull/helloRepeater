@@ -49,6 +49,26 @@
 
 ### 方法2：从BApp Store安装（待上架）
 
+## 📚 使用文档
+
+我们提供了完整的使用文档，帮助你快速上手和深入使用：
+
+| 文档 | 说明 | 适合人群 |
+|------|------|---------|
+| **[快速开始](doc/README.md)** | 5分钟快速上手，功能概览 | 新用户 |
+| **[安装教程](doc/INSTALLATION.md)** | 详细安装步骤和故障排查 | 所有用户 |
+| **[使用教程](doc/USER_GUIDE.md)** | 完整功能使用说明 | 所有用户 |
+| **[规则配置指南](doc/RULES_GUIDE.md)** | 5种规则类型的详细配置 | 高级用户 |
+| **[高级功能](doc/ADVANCED_FEATURES.md)** | 进阶技巧和团队协作 | 高级用户 |
+| **[常见问题](doc/FAQ.md)** | 问题解答和最佳实践 | 所有用户 |
+| **[故障排查](doc/TROUBLESHOOTING.md)** | 问题诊断和解决方案 | 遇到问题用户 |
+
+**建议阅读顺序**：
+1. 新用户：[快速开始](doc/README.md) → [安装教程](doc/INSTALLATION.md) → [使用教程](doc/USER_GUIDE.md)
+2. 想深入了解规则配置：[规则配置指南](doc/RULES_GUIDE.md)
+3. 团队协作：[高级功能](doc/ADVANCED_FEATURES.md)
+4. 遇到问题：[常见问题](doc/FAQ.md) → [故障排查](doc/TROUBLESHOOTING.md)
+
 ## 使用方法
 
 ### 发送请求到Repeater
